@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends
 
 from app.config import Settings, get_settings
+from app.routes.jobs import resolve_today
 from app.services.google_calendar_service import GoogleCalendarService
 from app.services.notion_service import NotionService
 from app.services.priority_engine import PriorityEngine
@@ -13,7 +12,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("/today")
 def get_today_tasks(settings: Settings = Depends(get_settings)) -> dict[str, object]:
-    today = datetime.now().astimezone().date()
+    today = resolve_today(settings)
     notion_service = NotionService(settings)
     calendar_service = GoogleCalendarService(settings)
     priority_engine = PriorityEngine()
@@ -23,4 +22,3 @@ def get_today_tasks(settings: Settings = Depends(get_settings)) -> dict[str, obj
     free_blocks = calendar_service.calculate_free_blocks(events, today)
     selected = priority_engine.select_top_tasks(tasks, free_blocks, today)
     return {"tasks": [task.model_dump() for task in selected]}
-

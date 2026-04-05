@@ -1,16 +1,54 @@
-# Personal Operating System for Daily Focus
+# Personal OS
 
-Google Calendar と Notion を使って、その日の予定と未完了タスクから「今日やるべき3つ」を選び、Telegram に通知する FastAPI バックエンドです。
+Personal OS is a personal productivity backend built with Python and FastAPI.
+It selects the top 3 tasks for the day from a task list, estimates available time, and generates a morning summary message.
 
-## Features
+This public repository is a safe demo version. It runs in `mock mode` with sample task data and does not require real Notion, Google Calendar, or Telegram credentials.
 
-- Google Calendar から当日の予定を取得
-- イベント前後にバッファを加味して空き時間を算出
-- Notion Tasks DB から未完了タスクを取得
-- 優先度、締切、所要時間、空き時間適合でスコアリング
-- カテゴリ分散を意識して最大 3 件を選定
-- 朝通知と夜の未完了通知を実行
-- 手動実行用の FastAPI エンドポイントを提供
+## What It Does
+
+- Loads open tasks from structured data
+- Scores tasks by priority, deadline, estimated time, and time-block fit
+- Selects up to 3 tasks for today with light category variety
+- Builds morning and night summary messages
+- Exposes FastAPI endpoints for health, calendar, tasks, and jobs
+
+## Why This Exists
+
+The original idea is to reduce daily decision fatigue.
+Instead of manually checking a calendar, scanning a task list, and deciding what matters most, the system prepares a short focused plan automatically.
+
+In the private production version, this flow is connected to real services and runs on a schedule.
+In this public version, the same core logic is shown with mock data so the architecture and behavior can be reviewed safely.
+
+## Demo Mode
+
+This repo supports a public demo mode through environment variables.
+
+```env
+USE_MOCK_DATA=true
+MOCK_TODAY_DATE=2026-04-05
+MOCK_DATA_DIR=mock_data
+DAY_START=08:00
+DAY_END=22:00
+MIN_BLOCK_MINUTES=20
+BUFFER_MINUTES=15
+TIMEZONE=Asia/Tokyo
+```
+
+In mock mode:
+
+- sample tasks are loaded from [mock_data/tasks.json](/home/sora/dev/personal-os/mock_data/tasks.json)
+- no real Notion API calls are made
+- no real Telegram message is sent
+- the generated message is printed locally instead
+
+## Tech Stack
+
+- Python
+- FastAPI
+- requests
+- pytest
 
 ## Project Structure
 
@@ -23,51 +61,35 @@ personal-os/
 │   ├── services/
 │   ├── models/
 │   └── utils/
+├── mock_data/
+├── scripts/
 ├── tests/
 ├── requirements.txt
-├── .env.example
-└── README.md
+└── .env.example
 ```
 
-## Setup
+## Local Setup
 
-1. Python 3.11 以上を用意します。
-2. 仮想環境を作成して依存関係を入れます。
+1. Create a virtual environment and install dependencies.
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. `.env.example` を `.env` にコピーして各 API キーを設定します。
+2. Create `.env` from the example file.
 
 ```bash
 cp .env.example .env
 ```
 
-4. 開発サーバーを起動します。
-
-```bash
-uvicorn app.main:app --reload
-```
-
-## Environment Variables
+3. Enable mock mode in `.env`.
 
 ```env
-NOTION_API_KEY=
-NOTION_TASK_DB_ID=
-NOTION_IDEA_DB_ID=
-NOTION_DAILY_LOG_DB_ID=
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REFRESH_TOKEN=
-GOOGLE_CALENDAR_ID=primary
-
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-
+USE_MOCK_DATA=true
+MOCK_TODAY_DATE=2026-04-05
+MOCK_DATA_DIR=mock_data
 DAY_START=08:00
 DAY_END=22:00
 MIN_BLOCK_MINUTES=20
@@ -75,54 +97,33 @@ BUFFER_MINUTES=15
 TIMEZONE=Asia/Tokyo
 ```
 
-## API Endpoints
+4. Start the API server.
+
+```bash
+uvicorn app.main:app --reload
+```
+
+## Example Endpoints
 
 - `GET /health`
+- `GET /calendar/today`
+- `GET /tasks/today`
 - `POST /jobs/morning`
 - `POST /jobs/night`
-- `GET /tasks/today`
-- `GET /calendar/today`
 
-## Cron Examples
+## Running the Demo Jobs
 
-- 毎朝 08:00 に朝ジョブを呼ぶ
-- 毎晩 21:00 に夜ジョブを呼ぶ
+Run the morning job locally:
 
-GitHub Actions、Railway Cron、Vercel Cron、またはサーバー上の `cron` で `POST /jobs/morning` と `POST /jobs/night` を叩く構成を想定しています。
+```bash
+python scripts/run_morning_job.py
+```
 
-## GitHub Actions Automation
+Run the night job locally:
 
-ローカルでサーバーを立てっぱなしにしなくても、GitHub Actions で朝夜ジョブを自動実行できます。設定ファイルは [.github/workflows/scheduled-jobs.yml](/home/sora/dev/personal-os/.github/workflows/scheduled-jobs.yml) です。
-
-やること:
-
-1. このプロジェクトを GitHub リポジトリに置く
-2. GitHub の `Settings > Secrets and variables > Actions` を開く
-3. 以下の Repository Secrets を追加する
-
-- `NOTION_API_KEY`
-- `NOTION_TASK_DB_ID`
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-- `DAY_START`
-- `DAY_END`
-- `MIN_BLOCK_MINUTES`
-- `BUFFER_MINUTES`
-- `TIMEZONE`
-
-Google Calendar をあとで使う場合は追加で以下も入れます。
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REFRESH_TOKEN`
-- `GOOGLE_CALENDAR_ID`
-
-このワークフローは日本時間で次の時刻に動くように設定しています。
-
-- 毎朝 08:00 JST
-- 毎晩 21:00 JST
-
-手動実行もできます。GitHub の `Actions` タブから `Personal OS Scheduled Jobs` を開き、`Run workflow` で `morning` または `night` を選んで実行してください。
+```bash
+python scripts/run_night_job.py
+```
 
 ## Testing
 
@@ -130,19 +131,14 @@ Google Calendar をあとで使う場合は追加で以下も入れます。
 pytest
 ```
 
-## Notion Tasks DB Setup
+## Architecture Notes
 
-`Tasks` データベースを作ったあと、`.env` に `NOTION_API_KEY` と `NOTION_TASK_DB_ID` を入れれば、次のコマンドで必要なプロパティを一括追加できます。
+- `NotionService` maps external task records into internal `Task` models
+- `GoogleCalendarService` calculates free blocks between `DAY_START` and `DAY_END`
+- `PriorityEngine` scores and ranks candidate tasks
+- `TelegramService` delivers the final message in production and prints it in mock mode
 
-```bash
-.venv/bin/python scripts/setup_notion_tasks_db.py
-```
+## Security Note
 
-`Name` タイトル列は Notion 側で最初から存在する前提です。
-
-## Notes
-
-- Google Calendar は Refresh Token から Access Token を取得して API を呼びます。
-- Google 認証情報が未設定の間は、予定なしとして扱い、`DAY_START` から `DAY_END` までを空き時間として朝ジョブを動かせます。
-- Notion の `TodayCandidate` は朝ジョブで選ばれたタスクのマークにも使います。
-- Night Job は `TodayCandidate = true` かつ `Status != Done` のタスクを通知します。
+This public repo does not include real API keys, tokens, or personal workspace data.
+Production credentials and real automations are kept in a separate private environment.

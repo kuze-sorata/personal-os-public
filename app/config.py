@@ -23,6 +23,9 @@ class Settings(BaseSettings):
 
     telegram_bot_token: str = Field(default="")
     telegram_chat_id: str = Field(default="")
+    use_mock_data: bool = Field(default=False)
+    mock_today_date: str = Field(default="2026-04-05")
+    mock_data_dir: str = Field(default="mock_data")
 
     day_start: str = Field(default="08:00")
     day_end: str = Field(default="22:00")
@@ -34,4 +37,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

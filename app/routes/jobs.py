@@ -16,6 +16,12 @@ from app.utils.datetime_utils import format_time_range
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
+def resolve_today(settings: Settings):
+    if settings.use_mock_data:
+        return datetime.fromisoformat(settings.mock_today_date).date()
+    return datetime.now().astimezone().date()
+
+
 def build_morning_message(
     events: list[CalendarEvent],
     free_blocks: list[FreeBlock],
@@ -66,7 +72,7 @@ def run_morning_job(
     priority_engine = priority_engine or PriorityEngine()
     telegram_service = telegram_service or TelegramService(settings)
 
-    today = datetime.now().astimezone().date()
+    today = resolve_today(settings)
     events = calendar_service.get_today_events(today)
     free_blocks = calendar_service.calculate_free_blocks(events, today)
     tasks = notion_service.get_open_tasks()
@@ -108,4 +114,3 @@ def morning_job(settings: Settings = Depends(get_settings)) -> dict[str, object]
 @router.post("/night")
 def night_job(settings: Settings = Depends(get_settings)) -> dict[str, object]:
     return run_night_job(settings)
-

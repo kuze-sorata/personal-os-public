@@ -4,6 +4,7 @@ from typing import Any
 import requests
 
 from app.config import Settings
+from app.services.mock_data_service import MockDataService
 from app.models.task import Task
 
 
@@ -18,6 +19,12 @@ class NotionService:
         }
 
     def get_open_tasks(self) -> list[Task]:
+        if self.settings.use_mock_data:
+            return [
+                task
+                for task in MockDataService(self.settings).load_tasks()
+                if task.status != "Done" and task.estimated_minutes > 0
+            ]
         payload = {
             "filter": {
                 "and": [
@@ -41,6 +48,8 @@ class NotionService:
         return [task for task in tasks if task.today_candidate]
 
     def get_idea_items(self) -> list[dict[str, Any]]:
+        if self.settings.use_mock_data:
+            return []
         response = requests.post(
             f"{self.base_url}/databases/{self.settings.notion_idea_db_id}/query",
             headers=self.headers,
@@ -51,9 +60,13 @@ class NotionService:
         return response.json().get("results", [])
 
     def update_task_status(self, task_id: str, status: str) -> None:
+        if self.settings.use_mock_data:
+            return
         self._update_page_properties(task_id, {"Status": {"select": {"name": status}}})
 
     def mark_task_today_candidate(self, task_id: str, value: bool) -> None:
+        if self.settings.use_mock_data:
+            return
         self._update_page_properties(task_id, {"TodayCandidate": {"checkbox": value}})
 
     def sync_today_candidates(self, selected_task_ids: set[str], tasks: list[Task]) -> None:
@@ -116,4 +129,3 @@ class NotionService:
         if not value:
             return None
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
-

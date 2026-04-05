@@ -112,3 +112,13 @@ def test_run_morning_job_works_without_google_events() -> None:
     assert "予定はありません" in result["message"]
     assert telegram_service.messages
     assert notion_service.synced_ids == {"1"}
+
+
+def test_run_morning_job_works_in_mock_mode() -> None:
+    settings = Settings(use_mock_data=True, mock_data_dir="mock_data", timezone="Asia/Tokyo")
+
+    result = run_morning_job(settings)
+
+    assert len(result["selected_tasks"]) == 3
+    assert "今日の3つ:" in result["message"]
+    assert "予定はありません" in result["message"]
