@@ -1,0 +1,87 @@
+name: Personal OS Scheduled Jobs
+
+on:
+  schedule:
+    # 08:00 JST = 23:00 UTC (previous day)
+    - cron: "0 23 * * *"
+    # 21:00 JST = 12:00 UTC
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+    inputs:
+      job_name:
+        description: "Run a single job manually"
+        required: true
+        default: morning
+        type: choice
+        options:
+          - morning
+          - night
+
+jobs:
+  morning:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 23 * * *' || github.event_name == 'workflow_dispatch' && github.event.inputs.job_name == 'morning'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run morning job
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TASK_DB_ID: ${{ secrets.NOTION_TASK_DB_ID }}
+          NOTION_IDEA_DB_ID: ${{ secrets.NOTION_IDEA_DB_ID }}
+          NOTION_DAILY_LOG_DB_ID: ${{ secrets.NOTION_DAILY_LOG_DB_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DAY_START: ${{ secrets.DAY_START }}
+          DAY_END: ${{ secrets.DAY_END }}
+          MIN_BLOCK_MINUTES: ${{ secrets.MIN_BLOCK_MINUTES }}
+          BUFFER_MINUTES: ${{ secrets.BUFFER_MINUTES }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
+        run: python scripts/run_morning_job.py
+
+  night:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 12 * * *' || github.event_name == 'workflow_dispatch' && github.event.inputs.job_name == 'night'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run night job
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TASK_DB_ID: ${{ secrets.NOTION_TASK_DB_ID }}
+          NOTION_IDEA_DB_ID: ${{ secrets.NOTION_IDEA_DB_ID }}
+          NOTION_DAILY_LOG_DB_ID: ${{ secrets.NOTION_DAILY_LOG_DB_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DAY_START: ${{ secrets.DAY_START }}
+          DAY_END: ${{ secrets.DAY_END }}
+          MIN_BLOCK_MINUTES: ${{ secrets.MIN_BLOCK_MINUTES }}
+          BUFFER_MINUTES: ${{ secrets.BUFFER_MINUTES }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
+        run: python scripts/run_night_job.py
