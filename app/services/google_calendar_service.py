@@ -14,6 +14,8 @@ class GoogleCalendarService:
         self.settings = settings
 
     def is_configured(self) -> bool:
+        if self.settings.use_mock_data:
+            return False
         return all(
             [
                 self.settings.google_client_id,
@@ -24,6 +26,8 @@ class GoogleCalendarService:
 
     def get_today_events(self, target_date: date | None = None) -> list[CalendarEvent]:
         target_date = target_date or datetime.now().astimezone().date()
+        if self.settings.use_mock_data:
+            return []
         if not self.is_configured():
             return []
         time_min, time_max = start_and_end_of_day(target_date, self.settings.timezone)

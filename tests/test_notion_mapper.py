@@ -3,7 +3,7 @@ from app.services.notion_service import NotionService
 
 
 def test_notion_task_mapping() -> None:
-    service = NotionService(Settings())
+    service = NotionService(Settings(use_mock_data=True))
     page = {
         "id": "task-123",
         "properties": {
@@ -28,4 +28,3 @@ def test_notion_task_mapping() -> None:
     assert task.status == "In Progress"
     assert task.today_candidate is True
     assert task.energy_level == "Medium"
-

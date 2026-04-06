@@ -7,6 +7,7 @@ from app.services.google_calendar_service import GoogleCalendarService
 
 def test_calculate_free_blocks_applies_buffers_and_min_block() -> None:
     settings = Settings(
+        use_mock_data=True,
         day_start="08:00",
         day_end="22:00",
         min_block_minutes=20,
@@ -39,6 +40,7 @@ def test_calculate_free_blocks_applies_buffers_and_min_block() -> None:
 
 def test_overlapping_buffered_events_are_merged() -> None:
     settings = Settings(
+        use_mock_data=True,
         day_start="08:00",
         day_end="12:00",
         min_block_minutes=20,
@@ -70,6 +72,7 @@ def test_overlapping_buffered_events_are_merged() -> None:
 
 def test_get_today_events_returns_empty_when_google_is_not_configured() -> None:
     settings = Settings(
+        use_mock_data=True,
         google_client_id="",
         google_client_secret="",
         google_refresh_token="",

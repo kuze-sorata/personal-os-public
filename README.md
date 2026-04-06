@@ -4,6 +4,7 @@ Personal OS is a personal productivity backend built with Python and FastAPI.
 It selects the top 3 tasks for the day from a task list, estimates available time, and generates a morning summary message.
 
 This public repository is a safe demo version. It runs in `mock mode` with sample task data and does not require real Notion, Google Calendar, or Telegram credentials.
+`USE_MOCK_DATA=true` is required in this branch, and the app will refuse to start if mock mode is turned off.
 
 ## What It Does
 
@@ -23,7 +24,7 @@ In this public version, the same core logic is shown with mock data so the archi
 
 ## Demo Mode
 
-This repo supports a public demo mode through environment variables.
+This repo is locked to public demo mode through environment variables.
 
 ```env
 USE_MOCK_DATA=true
@@ -40,6 +41,7 @@ In mock mode:
 
 - sample tasks are loaded from [mock_data/tasks.json](/home/sora/dev/personal-os/mock_data/tasks.json)
 - no real Notion API calls are made
+- no real Google Calendar API call is made
 - no real Telegram message is sent
 - the generated message is printed locally instead
 
@@ -84,7 +86,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-3. Enable mock mode in `.env`.
+3. Keep mock mode enabled in `.env`.
 
 ```env
 USE_MOCK_DATA=true
@@ -125,6 +127,8 @@ Run the night job locally:
 python scripts/run_night_job.py
 ```
 
+The public GitHub Actions workflow is manual-only and always runs with mock settings. It does not read production secrets.
+
 ## Testing
 
 ```bash
@@ -142,3 +146,4 @@ pytest
 
 This public repo does not include real API keys, tokens, or personal workspace data.
 Production credentials and real automations are kept in a separate private environment.
+Do not add real credentials or GitHub Secrets to this public repository.

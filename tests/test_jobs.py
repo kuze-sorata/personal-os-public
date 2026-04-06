@@ -102,7 +102,7 @@ def test_run_morning_job_works_without_google_events() -> None:
     )
 
     result = run_morning_job(
-        Settings(timezone="Asia/Tokyo"),
+        Settings(use_mock_data=True, timezone="Asia/Tokyo"),
         notion_service=notion_service,
         calendar_service=calendar_service,
         telegram_service=telegram_service,

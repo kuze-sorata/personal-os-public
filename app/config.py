@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from pydantic import Field
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,7 +24,7 @@ class Settings(BaseSettings):
 
     telegram_bot_token: str = Field(default="")
     telegram_chat_id: str = Field(default="")
-    use_mock_data: bool = Field(default=False)
+    use_mock_data: bool = Field(default=True)
     mock_today_date: str = Field(default="2026-04-05")
     mock_data_dir: str = Field(default="mock_data")
 
@@ -32,6 +33,12 @@ class Settings(BaseSettings):
     min_block_minutes: int = Field(default=20)
     buffer_minutes: int = Field(default=15)
     timezone: str = Field(default="Asia/Tokyo")
+
+    @model_validator(mode="after")
+    def validate_public_demo_safety(self) -> "Settings":
+        if not self.use_mock_data:
+            raise ValueError("public-demo requires USE_MOCK_DATA=true")
+        return self
 
 
 @lru_cache
