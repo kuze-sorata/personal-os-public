@@ -6,7 +6,8 @@ import requests
 from app.config import Settings
 from app.models.calendar_event import CalendarEvent
 from app.models.free_block import FreeBlock
-from app.utils.datetime_utils import combine_date_and_hhmm, start_and_end_of_day
+from app.services.mock_data_service import MockDataService
+from app.utils.datetime_utils import combine_date_and_hhmm, current_date_in_timezone, start_and_end_of_day
 
 
 class GoogleCalendarService:
@@ -25,9 +26,9 @@ class GoogleCalendarService:
         )
 
     def get_today_events(self, target_date: date | None = None) -> list[CalendarEvent]:
-        target_date = target_date or datetime.now().astimezone().date()
+        target_date = target_date or current_date_in_timezone(self.settings.timezone)
         if self.settings.use_mock_data:
-            return []
+            return MockDataService(self.settings).load_calendar_events(target_date)
         if not self.is_configured():
             return []
         time_min, time_max = start_and_end_of_day(target_date, self.settings.timezone)
@@ -68,7 +69,7 @@ class GoogleCalendarService:
         events: list[CalendarEvent],
         target_date: date | None = None,
     ) -> list[FreeBlock]:
-        target_date = target_date or datetime.now().astimezone().date()
+        target_date = target_date or current_date_in_timezone(self.settings.timezone)
         day_start = combine_date_and_hhmm(target_date, self.settings.day_start, self.settings.timezone)
         day_end = combine_date_and_hhmm(target_date, self.settings.day_end, self.settings.timezone)
         buffer_delta = timedelta(minutes=self.settings.buffer_minutes)

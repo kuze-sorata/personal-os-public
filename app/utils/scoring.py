@@ -13,14 +13,3 @@ def deadline_score(deadline_date: date | None, today_date: date) -> int:
     if delta_days <= 3:
         return 3
     return 0
-
-
-def estimated_minutes_score(minutes: int) -> int:
-    if 15 <= minutes <= 30:
-        return 3
-    if 31 <= minutes <= 60:
-        return 2
-    if 61 <= minutes <= 90:
-        return 1
-    return 0
-

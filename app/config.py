@@ -10,12 +10,12 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     notion_api_key: str = Field(default="")
     notion_task_db_id: str = Field(default="")
-    notion_idea_db_id: str = Field(default="")
-    notion_daily_log_db_id: str = Field(default="")
+    notion_learning_db_id: str = Field(default="")
 
     google_client_id: str = Field(default="")
     google_client_secret: str = Field(default="")

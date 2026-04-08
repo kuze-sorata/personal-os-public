@@ -23,14 +23,11 @@ class NotionService:
             return [
                 task
                 for task in MockDataService(self.settings).load_tasks()
-                if task.status != "Done" and task.estimated_minutes > 0
+                if task.status != "Done"
             ]
         payload = {
             "filter": {
-                "and": [
-                    {"property": "Status", "select": {"does_not_equal": "Done"}},
-                    {"property": "EstimatedMinutes", "number": {"greater_than": 0}},
-                ]
+                "and": [{"property": "Status", "select": {"does_not_equal": "Done"}}]
             }
         }
         response = requests.post(
@@ -46,18 +43,6 @@ class NotionService:
     def get_selected_open_tasks(self) -> list[Task]:
         tasks = self.get_open_tasks()
         return [task for task in tasks if task.today_candidate]
-
-    def get_idea_items(self) -> list[dict[str, Any]]:
-        if self.settings.use_mock_data:
-            return []
-        response = requests.post(
-            f"{self.base_url}/databases/{self.settings.notion_idea_db_id}/query",
-            headers=self.headers,
-            json={},
-            timeout=30,
-        )
-        response.raise_for_status()
-        return response.json().get("results", [])
 
     def update_task_status(self, task_id: str, status: str) -> None:
         if self.settings.use_mock_data:
@@ -87,13 +72,9 @@ class NotionService:
         return Task(
             id=page["id"],
             name=self._title(properties.get("Name")),
-            category=self._select_name(properties.get("Category"), default="Unknown"),
-            priority=self._select_name(properties.get("Priority"), default="Low"),
             deadline=self._parse_datetime(self._date_start(properties.get("Deadline"))),
-            estimated_minutes=self._number(properties.get("EstimatedMinutes")),
             status=self._select_name(properties.get("Status"), default="Not Started"),
             today_candidate=self._checkbox(properties.get("TodayCandidate")),
-            energy_level=self._select_name(properties.get("EnergyLevel")),
         )
 
     @staticmethod
@@ -114,11 +95,6 @@ class NotionService:
         if value is None:
             return None
         return value.get("start")
-
-    @staticmethod
-    def _number(prop: dict[str, Any] | None) -> int:
-        value = (prop or {}).get("number")
-        return int(value or 0)
 
     @staticmethod
     def _checkbox(prop: dict[str, Any] | None) -> bool:

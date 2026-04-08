@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
 
@@ -10,7 +10,7 @@ from app.services.google_calendar_service import GoogleCalendarService
 from app.services.notion_service import NotionService
 from app.services.priority_engine import PriorityEngine
 from app.services.telegram_service import TelegramService
-from app.utils.datetime_utils import format_time_range
+from app.utils.datetime_utils import current_date_in_timezone, format_time_range
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 def resolve_today(settings: Settings):
     if settings.use_mock_data:
         return datetime.fromisoformat(settings.mock_today_date).date()
-    return datetime.now().astimezone().date()
+    return current_date_in_timezone(settings.timezone)
 
 
 def build_morning_message(
@@ -29,7 +29,7 @@ def build_morning_message(
 ) -> str:
     schedule_lines = [f"- {format_time_range(event.start, event.end)} {event.title}" for event in events] or ["- 予定はありません"]
     free_block_lines = [f"- {format_time_range(block.start, block.end)}" for block in free_blocks] or ["- 空き時間はありません"]
-    task_lines = [f"{index}. {task.name} ({task.estimated_minutes}分)" for index, task in enumerate(tasks, start=1)] or ["- 選定できるタスクがありません"]
+    task_lines = [f"{index}. {task.name}" for index, task in enumerate(tasks, start=1)] or ["- 選定できるタスクがありません"]
     return "\n".join(
         [
             "おはようございます。",
@@ -46,14 +46,26 @@ def build_morning_message(
     )
 
 
-def build_night_message(tasks: list[Task]) -> str:
-    task_lines = [f"- {task.name}" for task in tasks] or ["- 未完了タスクはありません"]
+def build_night_message(
+    completed_tasks: list[Task],
+    incomplete_tasks: list[Task],
+    tomorrow_events: list[CalendarEvent],
+) -> str:
+    completed_lines = [f"- {task.name}" for task in completed_tasks] or ["- 完了タスクはありません"]
+    incomplete_lines = [f"- {task.name}" for task in incomplete_tasks] or ["- 未完了タスクはありません"]
+    tomorrow_schedule_lines = [f"- {format_time_range(event.start, event.end)} {event.title}" for event in tomorrow_events] or ["- 予定はありません"]
     return "\n".join(
         [
             "今日の振り返りです。",
             "",
+            "今日完了したタスク:",
+            *completed_lines,
+            "",
             "未完了タスク:",
-            *task_lines,
+            *incomplete_lines,
+            "",
+            "明日の予定:",
+            *tomorrow_schedule_lines,
             "",
             "明日に回すものを確認してください。",
         ]
@@ -92,16 +104,25 @@ def run_morning_job(
 def run_night_job(
     settings: Settings,
     notion_service: NotionService | None = None,
+    calendar_service: GoogleCalendarService | None = None,
     telegram_service: TelegramService | None = None,
 ) -> dict[str, object]:
     notion_service = notion_service or NotionService(settings)
+    calendar_service = calendar_service or GoogleCalendarService(settings)
     telegram_service = telegram_service or TelegramService(settings)
 
     tasks = notion_service.get_selected_open_tasks()
-    message = build_night_message(tasks)
+    today = resolve_today(settings)
+    tomorrow = today + timedelta(days=1)
+    completed_tasks = [task for task in tasks if task.status == "Done"]
+    incomplete_tasks = [task for task in tasks if task.status != "Done"]
+    tomorrow_events = calendar_service.get_today_events(tomorrow)
+    message = build_night_message(completed_tasks, incomplete_tasks, tomorrow_events)
     telegram_service.send_message(message)
     return {
-        "incomplete_tasks": [task.model_dump() for task in tasks],
+        "completed_tasks": [task.model_dump() for task in completed_tasks],
+        "incomplete_tasks": [task.model_dump() for task in incomplete_tasks],
+        "tomorrow_events": [event.model_dump() for event in tomorrow_events],
         "message": message,
     }
 

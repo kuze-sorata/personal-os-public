@@ -70,16 +70,16 @@ def test_overlapping_buffered_events_are_merged() -> None:
     ]
 
 
-def test_get_today_events_returns_empty_when_google_is_not_configured() -> None:
+def test_get_today_events_returns_mock_events_in_mock_mode() -> None:
     settings = Settings(
         use_mock_data=True,
-        google_client_id="",
-        google_client_secret="",
-        google_refresh_token="",
+        mock_today_date="2026-04-05",
+        mock_data_dir="mock_data",
         timezone="Asia/Tokyo",
     )
     service = GoogleCalendarService(settings)
 
     events = service.get_today_events(date(2026, 4, 5))
 
-    assert events == []
+    assert len(events) == 2
+    assert events[0].title == "Mock Client Call"

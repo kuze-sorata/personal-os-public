@@ -10,10 +10,9 @@ Personal Operating System for Daily Focus
 
 - Google Calendar から当日の予定を取得する
 - Notion の Task DB から未完了タスクを取得する
-- 空き時間、締切、優先度、所要時間をもとにその日やるべきタスクを最大3件選ぶ
+- 空き時間を確認しつつ、締切と `TodayCandidate` をもとにその日やるべきタスクを最大3件選ぶ
 - 朝に通知する
 - 夜に未完了タスクを整理し、次日に持ち越せるようにする
-- 発信ネタ管理用の Idea DB も保持する
 
 ## 2. スコープ
 
@@ -31,21 +30,17 @@ Personal Operating System for Daily Focus
 - 朝通知
 - 夜の未完了整理
 
-### Version 2
+補足:
 
-あとから追加する。
-
-- Idea DB 連携
-- Instagram / X / note のネタ管理
-- 投稿頻度不足の補助
-- Daily Log DB 自動記録
+- public demo は `USE_MOCK_DATA=true` を前提に動作する
+- demo 用の予定とタスクは `mock_data/` のサンプルデータを使う
 
 ## 3. 技術スタック
 
 推奨構成
 
 - Backend: Python + FastAPI
-- Scheduler: cron / GitHub Actions / Railway cron / Vercel cron
+- Scheduler: 手動実行または public GitHub Actions の `workflow_dispatch`
 - Data store: Notion Database をそのまま利用
 - Calendar: Google Calendar API
 - Notification: Telegram Bot API
@@ -58,7 +53,7 @@ Google Calendar API
         ↓
    Schedule Fetcher
         ↓
-Notion API (Task DB / Idea DB)
+Notion API (Task DB)
         ↓
  Priority Engine
         ↓
@@ -69,35 +64,28 @@ Notion API (Task DB / Idea DB)
 
 ## 5. データベース設計
 
-### Task DB (Notion)
+### Task Data
 
-- `Name` : Title
-- `Category` : Select
-- `Priority` : Select
-- `Deadline` : Date
-- `EstimatedMinutes` : Number
-- `Status` : Select
-- `TodayCandidate` : Checkbox
-- `EnergyLevel` : Select
-- `Recurring` : Checkbox
-- `Notes` : Rich text
+- `Name`
+- `Deadline`
+- `Status`
+- `TodayCandidate`
 
 ## 6. 優先順位エンジン仕様
 
-- High priority `+5`
-- Medium priority `+3`
-- Low priority `+1`
 - Deadline today `+5`
 - Deadline tomorrow `+4`
 - Deadline within 3 days `+3`
-- Estimated minutes 15-30 `+3`
-- Estimated minutes 31-60 `+2`
-- Estimated minutes 61-90 `+1`
 - `TodayCandidate=true` `+2`
-- Fits any free block `+3`
-- Does not fit any free block `-3`
+- free block は通知表示に使うが、選定スコアには使わない
 
-## 7. 成功条件
+## 7. 夜通知仕様
+
+- 未完了タスクだけでなく完了タスクも表示する
+- 翌日の予定を Google Calendar から取得し、夜通知に含める
+- mock mode では `mock_data/calendar_events.json` の翌日データを使う
+
+## 8. 成功条件
 
 - 毎朝、その日の予定が取得できる
 - 未完了タスクから妥当な3タスクが選ばれる

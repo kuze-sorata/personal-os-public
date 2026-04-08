@@ -8,13 +8,9 @@ def test_notion_task_mapping() -> None:
         "id": "task-123",
         "properties": {
             "Name": {"title": [{"plain_text": "Write SQL review"}]},
-            "Category": {"select": {"name": "Study"}},
-            "Priority": {"select": {"name": "High"}},
             "Deadline": {"date": {"start": "2026-04-05T12:00:00+09:00"}},
-            "EstimatedMinutes": {"number": 45},
             "Status": {"select": {"name": "In Progress"}},
             "TodayCandidate": {"checkbox": True},
-            "EnergyLevel": {"select": {"name": "Medium"}},
         },
     }
 
@@ -22,9 +18,5 @@ def test_notion_task_mapping() -> None:
 
     assert task.id == "task-123"
     assert task.name == "Write SQL review"
-    assert task.category == "Study"
-    assert task.priority == "High"
-    assert task.estimated_minutes == 45
     assert task.status == "In Progress"
     assert task.today_candidate is True
-    assert task.energy_level == "Medium"

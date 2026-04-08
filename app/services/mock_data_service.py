@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 from app.config import Settings
+from app.models.calendar_event import CalendarEvent
 from app.models.task import Task
 
 
@@ -20,15 +21,23 @@ class MockDataService:
             Task(
                 id=item["id"],
                 name=item["name"],
-                category=item.get("category", "Unknown"),
-                priority=item.get("priority", "Low"),
                 deadline=datetime.fromisoformat(item["deadline"]) if item.get("deadline") else None,
-                estimated_minutes=item.get("estimated_minutes", 0),
                 status=item.get("status", "Not Started"),
                 today_candidate=item.get("today_candidate", False),
-                energy_level=item.get("energy_level"),
             )
             for item in payload
+        ]
+
+    def load_calendar_events(self, target_date: date) -> list[CalendarEvent]:
+        payload = self._load_json("calendar_events.json")
+        return [
+            CalendarEvent(
+                title=item["title"],
+                start=datetime.fromisoformat(item["start"]),
+                end=datetime.fromisoformat(item["end"]),
+            )
+            for item in payload
+            if datetime.fromisoformat(item["start"]).date() == target_date
         ]
 
     def _load_json(self, filename: str) -> Any:

@@ -4,7 +4,7 @@ from app.config import Settings
 from app.models.calendar_event import CalendarEvent
 from app.models.free_block import FreeBlock
 from app.models.task import Task
-from app.routes.jobs import build_morning_message, run_morning_job
+from app.routes.jobs import build_morning_message, run_morning_job, run_night_job
 
 
 class DummyNotionService:
@@ -17,6 +17,9 @@ class DummyNotionService:
 
     def sync_today_candidates(self, selected_task_ids: set[str], tasks: list[Task]) -> None:
         self.synced_ids = selected_task_ids
+
+    def get_selected_open_tasks(self) -> list[Task]:
+        return [task for task in self.tasks if task.today_candidate]
 
 
 class DummyTelegramService:
@@ -59,13 +62,9 @@ def test_build_morning_message_contains_sections() -> None:
             Task(
                 id="1",
                 name="SQL復習",
-                category="Study",
-                priority="High",
                 deadline=None,
-                estimated_minutes=45,
                 status="Not Started",
                 today_candidate=True,
-                energy_level="Medium",
             )
         ],
     )
@@ -73,20 +72,16 @@ def test_build_morning_message_contains_sections() -> None:
     assert "今日の予定:" in message
     assert "空き時間:" in message
     assert "今日の3つ:" in message
-    assert "SQL復習 (45分)" in message
+    assert "1. SQL復習" in message
 
 
 def test_run_morning_job_works_without_google_events() -> None:
     task = Task(
         id="1",
         name="SQL復習",
-        category="Study",
-        priority="High",
         deadline=None,
-        estimated_minutes=45,
         status="Not Started",
         today_candidate=False,
-        energy_level="Medium",
     )
     notion_service = DummyNotionService([task])
     telegram_service = DummyTelegramService()
@@ -121,4 +116,47 @@ def test_run_morning_job_works_in_mock_mode() -> None:
 
     assert len(result["selected_tasks"]) == 3
     assert "今日の3つ:" in result["message"]
-    assert "予定はありません" in result["message"]
+    assert "Mock Client Call" in result["message"]
+
+
+def test_run_night_job_includes_tomorrow_schedule() -> None:
+    completed_task = Task(
+        id="1",
+        name="Landing page copyを整える",
+        deadline=None,
+        status="Done",
+        today_candidate=True,
+    )
+    incomplete_task = Task(
+        id="2",
+        name="X投稿案を3本メモする",
+        deadline=None,
+        status="In Progress",
+        today_candidate=True,
+    )
+    notion_service = DummyNotionService([completed_task, incomplete_task])
+    telegram_service = DummyTelegramService()
+    calendar_service = DummyCalendarService(
+        events=[
+            CalendarEvent(
+                title="Morning Shift",
+                start=datetime.fromisoformat("2026-04-06T09:00:00+09:00"),
+                end=datetime.fromisoformat("2026-04-06T12:00:00+09:00"),
+            )
+        ],
+        free_blocks=[],
+    )
+
+    result = run_night_job(
+        Settings(use_mock_data=True, mock_today_date="2026-04-05", timezone="Asia/Tokyo"),
+        notion_service=notion_service,
+        calendar_service=calendar_service,
+        telegram_service=telegram_service,
+    )
+
+    assert "今日完了したタスク:" in result["message"]
+    assert "- Landing page copyを整える" in result["message"]
+    assert "未完了タスク:" in result["message"]
+    assert "- X投稿案を3本メモする" in result["message"]
+    assert "明日の予定:" in result["message"]
+    assert "- 09:00-12:00 Morning Shift" in result["message"]
