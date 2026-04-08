@@ -1,5 +1,7 @@
 # Personal OS (Public Demo)
 
+[![CI](https://github.com/kuze-sorata/personal-os-public/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kuze-sorata/personal-os-public/actions/workflows/ci.yml)
+
 A mock-safe backend that recommends **Top 3 tasks for today** from task + calendar inputs.
 
 ## What It Does

@@ -1,0 +1,38 @@
+name: Personal OS CI
+
+on:
+  push:
+    branches:
+      - main
+      - public-demo
+  pull_request:
+    branches:
+      - main
+      - public-demo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      USE_MOCK_DATA: "true"
+      MOCK_TODAY_DATE: "2026-04-05"
+      MOCK_DATA_DIR: "mock_data"
+      DAY_START: "08:00"
+      DAY_END: "22:00"
+      MIN_BLOCK_MINUTES: "20"
+      BUFFER_MINUTES: "15"
+      TIMEZONE: "Asia/Tokyo"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -q
