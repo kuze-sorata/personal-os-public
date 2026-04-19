@@ -44,6 +44,27 @@ class NotionService:
         tasks = self.get_open_tasks()
         return [task for task in tasks if task.today_candidate]
 
+    def get_selected_tasks(self) -> list[Task]:
+        if self.settings.use_mock_data:
+            tasks = MockDataService(self.settings).load_tasks()
+            return [task for task in tasks if task.today_candidate]
+
+        payload = {
+            "filter": {
+                "property": "TodayCandidate",
+                "checkbox": {"equals": True},
+            }
+        }
+        response = requests.post(
+            f"{self.base_url}/databases/{self.settings.notion_task_db_id}/query",
+            headers=self.headers,
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return [self._map_task(page) for page in data.get("results", [])]
+
     def update_task_status(self, task_id: str, status: str) -> None:
         if self.settings.use_mock_data:
             return

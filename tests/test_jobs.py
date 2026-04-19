@@ -21,6 +21,9 @@ class DummyNotionService:
     def get_selected_open_tasks(self) -> list[Task]:
         return [task for task in self.tasks if task.today_candidate]
 
+    def get_selected_tasks(self) -> list[Task]:
+        return [task for task in self.tasks if task.today_candidate]
+
 
 class DummyTelegramService:
     def __init__(self) -> None:
@@ -51,13 +54,6 @@ def test_build_morning_message_contains_sections() -> None:
                 end=datetime.fromisoformat("2026-04-05T16:00:00+09:00"),
             )
         ],
-        free_blocks=[
-            FreeBlock(
-                start=datetime.fromisoformat("2026-04-05T08:00:00+09:00"),
-                end=datetime.fromisoformat("2026-04-05T09:30:00+09:00"),
-                minutes=90,
-            )
-        ],
         tasks=[
             Task(
                 id="1",
@@ -70,9 +66,9 @@ def test_build_morning_message_contains_sections() -> None:
     )
 
     assert "今日の予定:" in message
-    assert "空き時間:" in message
     assert "今日の3つ:" in message
     assert "1. SQL復習" in message
+    assert "空き時間:" not in message
 
 
 def test_run_morning_job_works_without_google_events() -> None:

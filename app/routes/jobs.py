@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 
 from app.config import Settings, get_settings
 from app.models.calendar_event import CalendarEvent
-from app.models.free_block import FreeBlock
 from app.models.task import Task
 from app.services.google_calendar_service import GoogleCalendarService
 from app.services.notion_service import NotionService
@@ -24,11 +23,9 @@ def resolve_today(settings: Settings):
 
 def build_morning_message(
     events: list[CalendarEvent],
-    free_blocks: list[FreeBlock],
     tasks: list[Task],
 ) -> str:
     schedule_lines = [f"- {format_time_range(event.start, event.end)} {event.title}" for event in events] or ["- 予定はありません"]
-    free_block_lines = [f"- {format_time_range(block.start, block.end)}" for block in free_blocks] or ["- 空き時間はありません"]
     task_lines = [f"{index}. {task.name}" for index, task in enumerate(tasks, start=1)] or ["- 選定できるタスクがありません"]
     return "\n".join(
         [
@@ -36,9 +33,6 @@ def build_morning_message(
             "",
             "今日の予定:",
             *schedule_lines,
-            "",
-            "空き時間:",
-            *free_block_lines,
             "",
             "今日の3つ:",
             *task_lines,
@@ -90,7 +84,7 @@ def run_morning_job(
     tasks = notion_service.get_open_tasks()
     selected_tasks = priority_engine.select_top_tasks(tasks, free_blocks, today, limit=3)
     notion_service.sync_today_candidates({task.id for task in selected_tasks}, tasks)
-    message = build_morning_message(events, free_blocks, selected_tasks)
+    message = build_morning_message(events, selected_tasks)
     telegram_service.send_message(message)
 
     return {
@@ -111,7 +105,7 @@ def run_night_job(
     calendar_service = calendar_service or GoogleCalendarService(settings)
     telegram_service = telegram_service or TelegramService(settings)
 
-    tasks = notion_service.get_selected_open_tasks()
+    tasks = notion_service.get_selected_tasks()
     today = resolve_today(settings)
     tomorrow = today + timedelta(days=1)
     completed_tasks = [task for task in tasks if task.status == "Done"]
