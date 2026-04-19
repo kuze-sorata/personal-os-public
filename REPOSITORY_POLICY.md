@@ -80,13 +80,26 @@ Do not use `public-demo` for:
 3. Push to the private repository
 4. Confirm GitHub Actions behavior if automation changed
 
+### Source-of-truth rule (important)
+
+Use `main` as the source of truth for product behavior.
+
+Recommended order:
+
+1. Implement and verify behavior on `main` first
+2. After behavior is stable, copy only public-safe parts to `public-demo`
+3. Re-verify on `public-demo` with `USE_MOCK_DATA=true`
+
+Public-only design updates (portfolio wording, mock sample quality, diagrams) may be done directly on `public-demo`.
+
 ### When updating the public demo repository
 
-1. Start from `public-demo`
-2. Keep the README portfolio-oriented
-3. Use mock data only
-4. Test locally with `USE_MOCK_DATA=true`
-5. Push `public-demo` to the public repository's `main`
+1. Start from `public-demo` after private behavior is finalized on `main`
+2. Keep only public-safe changes (no secrets, no private operations)
+3. Keep the README portfolio-oriented
+4. Use mock data only
+5. Test locally with `USE_MOCK_DATA=true`
+6. Push `public-demo` to the public repository's `main`
 
 Recommended command pattern:
 

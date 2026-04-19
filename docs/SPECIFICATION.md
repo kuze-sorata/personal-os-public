@@ -10,7 +10,7 @@ Personal Operating System for Daily Focus
 
 - Google Calendar から当日の予定を取得する
 - Notion の Task DB から未完了タスクを取得する
-- 空き時間を確認しつつ、締切と `TodayCandidate` をもとにその日やるべきタスクを最大3件選ぶ
+- 締切と `TodayCandidate` をもとにその日やるべきタスクを最大3件選ぶ
 - 朝に通知する
 - 夜に未完了タスクを整理し、次日に持ち越せるようにする
 
@@ -77,15 +77,20 @@ Notion API (Task DB)
 - Deadline tomorrow `+4`
 - Deadline within 3 days `+3`
 - `TodayCandidate=true` `+2`
-- free block は通知表示に使うが、選定スコアには使わない
+- free block は算出するが、選定スコアと朝通知本文には使わない
 
-## 7. 夜通知仕様
+## 7. 朝通知仕様
+
+- 朝通知は「今日の予定」と「今日の3つ」のみ表示する
+- 空き時間は内部計算/API レスポンスには含めるが、通知本文には表示しない
+
+## 8. 夜通知仕様
 
 - 未完了タスクだけでなく完了タスクも表示する
 - 翌日の予定を Google Calendar から取得し、夜通知に含める
 - mock mode では `mock_data/calendar_events.json` の翌日データを使う
 
-## 8. 成功条件
+## 9. 成功条件
 
 - 毎朝、その日の予定が取得できる
 - 未完了タスクから妥当な3タスクが選ばれる

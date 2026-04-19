@@ -7,7 +7,7 @@ A mock-safe backend that recommends **Top 3 tasks for today** from task + calend
 ## What It Does
 
 - ranks open tasks with simple, explainable rules (`Deadline` + `TodayCandidate`)
-- generates a morning summary (schedule, free blocks, top tasks)
+- generates a morning summary (schedule, top tasks)
 - generates a night review (done/incomplete tasks, tomorrow schedule)
 - runs fully in `USE_MOCK_DATA=true` for safe public review
 

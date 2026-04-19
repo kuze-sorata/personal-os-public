@@ -18,6 +18,8 @@
 
 ## エージェント向け作業ルール
 
+- 機能仕様の変更は `main`（private）を先に完成させる
+- `public-demo` へは、private 変更のうち公開可能な差分だけを反映する
 - 実運用に関わる変更は `main` を前提に扱う
 - 公開用の説明、mock data、portfolio 向け README は `public-demo` を前提に扱う
 - private/public の README を同じブランチ上で往復編集しない
