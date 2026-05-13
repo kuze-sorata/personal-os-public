@@ -32,12 +32,16 @@ No live credentials or real API calls are required.
 
 ## Quick Start
 
+For a step-by-step guide, see [docs/STARTUP_GUIDE.md](docs/STARTUP_GUIDE.md).
+
+If you want the shortest possible setup, run:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload
+USE_MOCK_DATA=true uvicorn app.main:app --reload
 ```
 
 ## Demo Endpoints
@@ -45,6 +49,49 @@ uvicorn app.main:app --reload
 - `GET /health`
 - `POST /jobs/morning`
 - `POST /jobs/night`
+
+## Local Setup
+
+### 1. Create the environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+### 2. Enable mock mode
+
+Public demo should run with mock data only.
+
+```bash
+export USE_MOCK_DATA=true
+```
+
+You can also prefix the command directly:
+
+```bash
+USE_MOCK_DATA=true uvicorn app.main:app --reload
+```
+
+### 3. Start the app
+
+```bash
+uvicorn app.main:app --reload
+```
+
+### 4. Open the demo
+
+- `http://127.0.0.1:8000/health`
+- `http://127.0.0.1:8000/jobs/morning`
+- `http://127.0.0.1:8000/jobs/night`
+
+## What You See
+
+- the morning job selects the top 3 tasks
+- the night job summarizes completed and incomplete items
+- mock data keeps the demo safe and self-contained
 
 ## Test
 

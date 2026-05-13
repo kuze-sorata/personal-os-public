@@ -34,6 +34,8 @@ Personal Operating System for Daily Focus
 
 - public demo は `USE_MOCK_DATA=true` を前提に動作する
 - demo 用の予定とタスクは `mock_data/` のサンプルデータを使う
+- 起動手順は [docs/STARTUP_GUIDE.md](/home/sora/dev/personal-os-public-demo/docs/STARTUP_GUIDE.md) を優先する
+- 公開版では live secret や private workspace 依存の説明を入れない
 
 ## 3. 技術スタック
 
@@ -45,6 +47,7 @@ Personal Operating System for Daily Focus
 - Calendar: Google Calendar API
 - Notification: Telegram Bot API
 - Config: `.env`
+- Runtime: `USE_MOCK_DATA=true`
 
 ## 4. システム構成
 
@@ -96,3 +99,23 @@ Notion API (Task DB)
 - 未完了タスクから妥当な3タスクが選ばれる
 - Telegram に自然な形式で通知できる
 - 夜に未完了整理ができる
+
+## 10. 起動と確認
+
+公開版は、実サービスの認証情報なしで起動できる。
+
+基本手順:
+
+1. 仮想環境を作る
+2. `USE_MOCK_DATA=true` を有効にする
+3. `uvicorn app.main:app --reload` を起動する
+
+確認先:
+
+- `GET /health`
+- `POST /jobs/morning`
+- `POST /jobs/night`
+
+参照:
+
+- [起動手順](/home/sora/dev/personal-os-public-demo/docs/STARTUP_GUIDE.md)
