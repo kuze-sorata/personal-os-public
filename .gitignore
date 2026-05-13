@@ -1,6 +1,5 @@
+client_secret.json
+.telegram_poll_state.json
 .env
+.google_oauth.env
 .venv/
-.pytest_cache/
-__pycache__/
-*.pyc
-.codex
